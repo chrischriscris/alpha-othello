@@ -97,13 +97,13 @@ int main(int argc, const char **argv) {
 
         try {
             if( algorithm == 1 ) {
-                //value = negamax(pv[i], 0, color, use_tt);
+                value = negamax(pv[i], 10, color, use_tt);
             } else if( algorithm == 2 ) {
-                //value = negamax(pv[i], 0, -200, 200, color, use_tt);
+                value = negamax(pv[i], 10, -200, 200, color, use_tt);
             } else if( algorithm == 3 ) {
-                //value = scout(pv[i], 0, color, use_tt);
+                value = scout(pv[i], 10, color, use_tt);
             } else if( algorithm == 4 ) {
-                //value = negascout(pv[i], 0, -200, 200, color, use_tt);
+                value = negascout(pv[i], 10, -200, 200, color, use_tt);
             }
         } catch( const bad_alloc &e ) {
             cout << "size TT[0]: size=" << TTable[0].size() << ", #buckets=" << TTable[0].bucket_count() << endl;
@@ -125,3 +125,160 @@ int main(int argc, const char **argv) {
     return 0;
 }
 
+//-------------------- WE SHOULD MOVE THIS TO A SEPARATE FILE? ---------------------//
+// TO-CHECK: How to configurate depth
+
+/**
+ * Negamax algorithm (minmax version)
+ * @param state State to evaluate
+ * @param depth Depth of the search
+ * @param color Color of the player to move
+ * @param use_tt Use transposition table
+ * @return Value of the state
+ */
+int negamax(state_t state, int depth, int color, bool use_tt) {
+    // If the state is terminal or depth == 0, return the value of the state
+    generated++;
+    if (depth == 0 || state.terminal()) return color * state.value();
+
+    // If the state is not in the TT, calculate the value of the state
+    int alpha = -200;
+    // OJOPELAO: 1 is black, -1 is white
+    for (int pos : state.valid_moves(color == 1)) {
+        state_t child = state.move(color == 1, pos);
+        alpha = max(alpha, -negamax(child, depth - 1, -color, use_tt));
+    }
+
+    expanded++;
+    return alpha;
+}
+
+/**
+ * Negamax algorithm (alpha-beta version)
+ * @param state State to evaluate
+ * @param depth Depth of the search
+ * @param alpha Alpha value
+ * @param beta Beta value
+ * @param color Color of the player to move
+ * @param use_tt Use transposition table
+ * @return Value of the state
+ */
+int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_tt) {
+    // If the state is terminal or depth == 0, return the value of the state
+    generated++;
+    if (depth == 0 || state.terminal()) return color * state.value();
+
+    // If the state is not in the TT, calculate the value of the state
+    int score = -200;
+    for (int pos : state.valid_moves(color == 1)) {
+        state_t child = state.move(color == 1, pos);
+        
+        int val = -negamax(child, depth - 1, -beta, -alpha, -color, use_tt);
+        score = max(score, val);
+        alpha = max(alpha, val);
+        if (alpha >= beta) break;
+    }
+
+    expanded++;
+    return score;
+}
+
+/**
+ * Test if a state is a win for the player to move
+ * @param state State to evaluate
+ * @param depth Depth of the search
+ * @param color Color of the player to move
+ * @param score Score to compare
+ * @param cond Condition to compare the score: 0 >, 1 >=
+ */
+bool test(state_t state, int depth, int color, int score, bool cond) {
+    // If the state is terminal or depth == 0, return the value of the state
+    generated++;
+    if (depth == 0 || state.terminal()) 
+        return (cond ? state.value() >= score : state.value() > score);
+
+    // If the state is not in the TT, calculate the value of the state
+    expanded++;
+    for (int pos : state.valid_moves(color == 1)) {
+        state_t child = state.move(color == 1, pos);
+        
+        if (color == 1 && test(child, depth - 1, -color, score, cond)) 
+            return true;
+        if (color == -1 && !test(child, depth - 1, -color, score, cond)) 
+            return false;
+    }
+
+    // If no child is a win, return false
+    return color == -1;
+}
+
+/**
+ * Scout algorithm
+ * @param state State to evaluate
+ * @param depth Depth of the search
+ * @param color Color of the player to move
+ * @param use_tt Use transposition table
+ * @return Value of the state
+ */
+int scout(state_t state, int depth, int color, bool use_tt) {
+    // If the state is terminal or depth == 0, return the value of the state
+    generated++;
+    if (depth == 0 || state.terminal()) return state.value();
+
+    // First child 
+    vector<int> moves = state.valid_moves(color == 1);
+    state_t child = state.move(color == 1, moves[0]);
+    int score = scout(child, depth - 1, -color, use_tt);
+
+    for (long unsigned int i = 1; i < moves.size(); ++i) {
+        child = state.move(color == 1, moves[i]);
+        int val = scout(child, depth - 1, -color, use_tt);
+
+        if (color == 1 && test(child, depth - 1, -color, score, 0)) 
+            score = val;
+
+        if (color == -1 && !test(child, depth - 1, -color, score, 1)) 
+            score = val;
+    }
+
+    expanded++;
+    return score;
+}
+
+/**
+ * Negascout algorithm
+ * @param state State to evaluate
+ * @param depth Depth of the search
+ * @param alpha Alpha value
+ * @param beta Beta value
+ * @param color Color of the player to move
+ * @param use_tt Use transposition table
+ * @return Value of the state
+ */
+int negascout(state_t state, int depth, int alpha, int beta, int color, bool use_tt) {
+    // If the state is terminal or depth == 0, return the value of the state
+    generated++;
+    if (depth == 0 || state.terminal()) return color * state.value();
+
+    int score = -200;
+    vector<int> moves = state.valid_moves(color == 1);
+    for (long unsigned int i = 0; i < moves.size(); ++i) {
+        state_t child = state.move(color == 1, moves[i]);
+
+        // First child 
+        if (i == 0) {
+            score = -negascout(child, depth - 1, -beta, -alpha, -color, use_tt);
+        } else {
+            score = -negascout(child, depth - 1, -alpha - 1, -alpha, -color, use_tt);
+            if (alpha < score && score < beta) {
+                score = -negascout(child, depth - 1, -beta, -score, -color, use_tt);
+            }
+        }
+
+        alpha = max(alpha, score);
+        if (alpha >= beta) break;
+    }
+
+    expanded++;
+    return alpha;
+}

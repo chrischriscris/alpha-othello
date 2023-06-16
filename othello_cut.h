@@ -155,6 +155,21 @@ class state_t {
     state_t white_move(int pos) { return move(false, pos); }
 
     /**
+     * Get the valid moves for a color
+     * @param color 
+     * @return vector of valid moves
+     */
+    std::vector<int> valid_moves(bool color) {
+        std::vector<int> moves;
+        for( int pos = 0; pos < DIM; ++pos ) {
+            if( (color && is_black_move(pos)) || (!color && is_white_move(pos)) ) {
+                moves.push_back(pos);
+            }
+        }
+        return moves;
+    }
+
+    /**
      * Get a random move for a color
      */
     int get_random_move(bool color) {
