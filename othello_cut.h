@@ -96,6 +96,11 @@ class state_t {
     unsigned pos_;
 
   public:
+    /**
+     * Initialize the board to the initial position: t = 6 = 0110
+     * white black
+     * black white
+     */ 
     explicit state_t(unsigned char t = 6) : t_(t), free_(0), pos_(0) { }
 
     unsigned char t() const { return t_; }
@@ -103,6 +108,11 @@ class state_t {
     unsigned pos() const { return pos_; }
     size_t hash() const { return free_ ^ pos_ ^ t_; }
 
+    /**
+     * Check if a position is black or white. 
+     * - Check if pos is less than 4 (central position), if so, 
+     * 
+     */
     bool is_color(bool color, int pos) const {
         if( color )
             return pos < 4 ? t_ & (1 << pos) : pos_ & (1 << (pos - 4));
@@ -111,19 +121,42 @@ class state_t {
     }
     bool is_black(int pos) const { return is_color(true, pos); }
     bool is_white(int pos) const { return is_color(false, pos); }
+
+    /**
+     * Check if a position is free. 
+     * If pos is less than 4, then it is not free (central position)
+     * 
+     */
     bool is_free(int pos) const { return pos < 4 ? false : !(free_ & (1 << (pos - 4))); }
     bool is_full() const { return ~free_ == 0; }
 
+    /**
+     * value() return game value
+     * terminal() return true if a state is terminal
+     * outflank() 
+     * is_black_move() check if a move is valid for black
+     * is_white_move() check if a move is valid for white
+     */
     int value() const;
     bool terminal() const;
     bool outflank(bool color, int pos) const;
     bool is_black_move(int pos) const { return (pos == DIM) || outflank(true, pos); }
     bool is_white_move(int pos) const { return (pos == DIM) || outflank(false, pos); }
 
+    /**
+     * set_color() set the color of a position
+     * move() return the state after a move
+     * black_move() return the state after a black move
+     * white_move() return the state after a white move
+     */
     void set_color(bool color, int pos);
     state_t move(bool color, int pos) const;
     state_t black_move(int pos) { return move(true, pos); }
     state_t white_move(int pos) { return move(false, pos); }
+
+    /**
+     * Get a random move for a color
+     */
     int get_random_move(bool color) {
         std::vector<int> valid_moves;
         for( int pos = 0; pos < DIM; ++pos ) {
@@ -151,6 +184,10 @@ class state_t {
     void print_bits(std::ostream &os) const;
 };
 
+/**
+ * Calculate the value of a state, which is the difference between the number of 
+ * black and white pieces on the board.
+ */
 inline int state_t::value() const {
     int v = 0;
     for( int pos = 0; pos < DIM; ++pos ) {
@@ -160,6 +197,10 @@ inline int state_t::value() const {
     return v;
 }
 
+/**
+ * Check if a state is terminal. It is terminal if the board is full or if there
+ * are no valid moves for both players.
+ */
 inline bool state_t::terminal() const {
     if( is_full() ) return true;
     for( unsigned b = 0; b < DIM; ++b )
@@ -167,6 +208,10 @@ inline bool state_t::terminal() const {
     return true;
 }
 
+/**
+ * Check if a piece can outflank some other pieces.
+ * color = true if the piece is black, false if it is white.
+ */
 inline bool state_t::outflank(bool color, int pos) const {
     if( !is_free(pos) ) return false;
 
@@ -199,11 +244,45 @@ inline bool state_t::outflank(bool color, int pos) const {
     }
 
     // [CHECK OVER DIAGONALS REMOVED]
-    assert(0);
+    // assert(0);
+
+    // Check main diagonal (\)
+    x = dia1[pos - 4];
+    while( *x != pos ) ++x;
+    // Check if x is the last element of the diagonal
+    if( *(x+1) != -1 ) {
+        // Search for the first element of the diagonal that is free or of the same color
+        for( p = x + 1; (*p != -1) && !is_free(*p) && (color ^ is_black(*p)); ++p );
+        // Check if there's at least two elements between x and p
+        if( (p > x + 1) && (*p != -1) && !is_free(*p) ) return true;
+    }
+    // Check if x is the first element of the diagonal
+    if ( x != dia1[pos - 4] ) {
+        for( p = x - 1; (p >= dia1[pos - 4]) && !is_free(*p) && (color ^ is_black(*p)); --p );
+        if( (p < x - 1) && (p >= dia1[pos - 4]) && !is_free(*p) ) return true;
+    }
+
+    // Check secondary diagonal (/)
+    x = dia2[pos - 4];
+    while( *x != pos ) ++x;
+    if( *(x+1) != -1 ) {
+        for( p = x + 1; (*p != -1) && !is_free(*p) && (color ^ is_black(*p)); ++p );
+        if( (p > x + 1) && (*p != -1) && !is_free(*p) ) return true;
+    }
+    if( x != dia2[pos - 4] ) {
+        for( p = x - 1; (p >= dia2[pos - 4]) && !is_free(*p) && (color ^ is_black(*p)); --p );
+        if( (p < x - 1) && (p >= dia2[pos - 4]) && !is_free(*p) ) return true;
+    }
 
     return false;
 }
 
+/**
+ * Set the color of a piece.
+ * color = true if the piece is black, false if it is white.
+ * If pos < 4, the piece is a central piece, then it is stored in t_ with OR operation.
+ * If pos >= 4, the piece is a free piece, then it is stored in free_ and pos_.
+ */
 inline void state_t::set_color(bool color, int pos) {
     if( color ) {
         if( pos < 4 ) {
@@ -222,6 +301,11 @@ inline void state_t::set_color(bool color, int pos) {
     }
 }
 
+/**
+ * Make a move given a position and a color.
+ * color = true if the piece is black, false if it is white.
+ * 
+ */
 inline state_t state_t::move(bool color, int pos) const {
     state_t s(*this);
     if( pos >= DIM ) return s;
@@ -264,6 +348,37 @@ inline state_t state_t::move(bool color, int pos) const {
     }
 
     // [PROCESS OF DIAGONALS REMOVED]
+    // Process main diagonal (\)
+    x = dia1[pos - 4];
+    while( *x != pos ) ++x;
+    if( *(x+1) != -1 ) {
+        for( p = x + 1; (*p != -1) && !is_free(*p) && (color ^ is_black(*p)); ++p );
+        if( (p > x + 1) && (*p != -1) && !is_free(*p) ) {
+            for( const int *q = x + 1; q < p; ++q ) s.set_color(color, *q);
+        }
+    }
+    if( x != dia1[pos - 4] ) {
+        for( p = x - 1; (p >= dia1[pos - 4]) && !is_free(*p) && (color ^ is_black(*p)); --p );
+        if( (p < x - 1) && (p >= dia1[pos - 4]) && !is_free(*p) ) {
+            for( const int *q = x - 1; q > p; --q ) s.set_color(color, *q);
+        }
+    }
+
+    // Process secondary diagonal (/)
+    x = dia2[pos - 4];
+    while( *x != pos ) ++x;
+    if( *(x+1) != -1 ) {
+        for( p = x + 1; (*p != -1) && !is_free(*p) && (color ^ is_black(*p)); ++p );
+        if( (p > x + 1) && (*p != -1) && !is_free(*p) ) {
+            for( const int *q = x + 1; q < p; ++q ) s.set_color(color, *q);
+        }
+    }
+    if( x != dia2[pos - 4] ) {
+        for( p = x - 1; (p >= dia2[pos - 4]) && !is_free(*p) && (color ^ is_black(*p)); --p );
+        if( (p < x - 1) && (p >= dia2[pos - 4]) && !is_free(*p) ) {
+            for( const int *q = x - 1; q > p; --q ) s.set_color(color, *q);
+        }
+    }
 
     return s;
 }
