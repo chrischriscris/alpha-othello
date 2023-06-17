@@ -2,12 +2,12 @@
 // Universidad Simon Bolivar, 2012.
 // Author: Blai Bonet
 // Last Revision: 1/11/16
-// Modified by: 
+// Modified by:
 
 #include <iostream>
 #include <limits>
-#include "othello_cut.h" // won't work correctly until .h is fixed!
-#include "utils.h"
+#include "othello_cut.hpp"
+#include "utils.hpp"
 
 #include <unordered_map>
 
@@ -172,7 +172,7 @@ int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_t
     int score = -200;
     for (int pos : state.valid_moves(color == 1)) {
         state_t child = state.move(color == 1, pos);
-        
+
         int val = -negamax(child, depth - 1, -beta, -alpha, -color, use_tt);
         score = max(score, val);
         alpha = max(alpha, val);
@@ -194,17 +194,17 @@ int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_t
 bool test(state_t state, int depth, int color, int score, bool cond) {
     // If the state is terminal or depth == 0, return the value of the state
     generated++;
-    if (depth == 0 || state.terminal()) 
+    if (depth == 0 || state.terminal())
         return (cond ? state.value() >= score : state.value() > score);
 
     // If the state is not in the TT, calculate the value of the state
     expanded++;
     for (int pos : state.valid_moves(color == 1)) {
         state_t child = state.move(color == 1, pos);
-        
-        if (color == 1 && test(child, depth - 1, -color, score, cond)) 
+
+        if (color == 1 && test(child, depth - 1, -color, score, cond))
             return true;
-        if (color == -1 && !test(child, depth - 1, -color, score, cond)) 
+        if (color == -1 && !test(child, depth - 1, -color, score, cond))
             return false;
     }
 
@@ -225,7 +225,7 @@ int scout(state_t state, int depth, int color, bool use_tt) {
     generated++;
     if (depth == 0 || state.terminal()) return state.value();
 
-    // First child 
+    // First child
     vector<int> moves = state.valid_moves(color == 1);
     state_t child = state.move(color == 1, moves[0]);
     int score = scout(child, depth - 1, -color, use_tt);
@@ -234,10 +234,10 @@ int scout(state_t state, int depth, int color, bool use_tt) {
         child = state.move(color == 1, moves[i]);
         int val = scout(child, depth - 1, -color, use_tt);
 
-        if (color == 1 && test(child, depth - 1, -color, score, 0)) 
+        if (color == 1 && test(child, depth - 1, -color, score, 0))
             score = val;
 
-        if (color == -1 && !test(child, depth - 1, -color, score, 1)) 
+        if (color == -1 && !test(child, depth - 1, -color, score, 1))
             score = val;
     }
 
@@ -265,7 +265,7 @@ int negascout(state_t state, int depth, int alpha, int beta, int color, bool use
     for (long unsigned int i = 0; i < moves.size(); ++i) {
         state_t child = state.move(color == 1, moves[i]);
 
-        // First child 
+        // First child
         if (i == 0) {
             score = -negascout(child, depth - 1, -beta, -alpha, -color, use_tt);
         } else {

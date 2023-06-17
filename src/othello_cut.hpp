@@ -1,17 +1,17 @@
 /*
  *  Copyright (C) 2012 Universidad Simon Bolivar
- * 
+ *
  *  Permission is hereby granted to distribute this software for
  *  non-commercial research purposes, provided that this copyright
  *  notice is included with any such distribution.
- *  
+ *
  *  THIS SOFTWARE IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
  *  EITHER EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE
  *  IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  *  PURPOSE.  THE ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE
  *  SOFTWARE IS WITH YOU.  SHOULD THE PROGRAM PROVE DEFECTIVE, YOU
  *  ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
- *  
+ *
  *  Blai Bonet, bonet@ldc.usb.ve
  *
  *  Last revision: 1/11/2016
@@ -28,7 +28,7 @@
 
 /**
  * rows[i] Contains the position of cells in the same row as cell i
- * 
+ *
  * -1 is used as a sentinel to indicate the end of the row
  */
 const int rows[][7] = {
@@ -42,7 +42,7 @@ const int rows[][7] = {
 
 /**
  * cols[i] Contains the position of cells in the same column as cell i
- * 
+ *
  * -1 is used as a sentinel to indicate the end of the row
  */
 const int cols[][7] = {
@@ -56,7 +56,7 @@ const int cols[][7] = {
 
 /**
  * dia1[i] Contains the position of cells in the same first diagonal as cell i
- * 
+ *
  * -1 is used as a sentinel to indicate the end of the row
  */
 const int dia1[][7] = {
@@ -70,7 +70,7 @@ const int dia1[][7] = {
 
 /**
  * dia2[i] Contains the position of cells in the same second diagonal as cell i
- * 
+ *
  * -1 is used as a sentinel to indicate the end of the row
  */
 const int dia2[][7] = {
@@ -84,7 +84,7 @@ const int dia2[][7] = {
 
 /**
  * Movements of the principal variation
- * 
+ *
  * -1 is used as a sentinel to indicate the end of the moves
  */
 static int PV[] = {
@@ -101,12 +101,12 @@ class state_t {
      * A bitboard that represents the four central cells of the board, so that
      * the first two bits represent the first row, and the last two bits the second row.
      */
-    unsigned char t_; 
+    unsigned char t_;
 
     /**
      * A bitboard that represents the remaining cells of the board, except the
      * four central cells. Each bit represents a cell.
-     * 
+     *
      * A bit is set to 0 if the cell is free, and 1 if it is occupied.
      */
     unsigned free_;
@@ -114,7 +114,7 @@ class state_t {
     /**
      * A bitboard that represents the black and white pieces on the board, except
      * the four central cells. Each bit represents a cell.
-     * 
+     *
      * A bit is set to 1 if the cell is occupied by a black piece, and 0 if it is
      * occupied by a white piece.
      */
@@ -123,7 +123,7 @@ class state_t {
   public:
     /**
      * Constructor that initializes the board to the initial position.
-     * 
+     *
      * @param t The bitboard that represents the four central cells of the board.
      *         By default, t = 6 = 0110 (white black, black white).
      */
@@ -133,14 +133,14 @@ class state_t {
 
     /**
      * Getter method for t_.
-     * 
+     *
      * @return The bitboard that represents the four central cells of the board.
      */
     unsigned char get_central_bitboard() const { return t_; }
 
     /**
      * Getter method for free_.
-     * 
+     *
      * @return The bitboard that represents the remaining cells of the board,
      *     except the four central cells.
      */
@@ -148,7 +148,7 @@ class state_t {
 
     /**
      * Getter method for pos_.
-     * 
+     *
      * @return The bitboard that represents the black and white pieces on the board,
      *     except the four central cells.
      */
@@ -158,30 +158,30 @@ class state_t {
 
     /**
      * Hash function for the state.
-     * 
+     *
      * @return The hash value of the state.
      */
     size_t hash() const { return free_ ^ pos_ ^ t_; }
 
     /**
      * Check if a position is occupied by a piece of a given color.
-     * 
+     *
      * @param color The color of the piece.
      * @param pos The position of the piece.
-     * 
+     *
      * @return True if the position is occupied by a piece of the given color,
      *     false otherwise.
      */
     bool is_color(bool color, int pos) const {
-        const masked_color = pos < 4 ? t_ & (1 << pos) : pos_ & (1 << (pos - 4));
+        const unsigned masked_color = pos < 4 ? t_ & (1 << pos) : pos_ & (1 << (pos - 4));
         return color ? masked_color : !masked_color;
     }
 
     /**
      * Check if a position is occupied by a black piece.
-     * 
+     *
      * @param pos The position of the piece.
-     * 
+     *
      * @return True if the position is occupied by a black piece,
      *     false otherwise.
      */
@@ -189,9 +189,9 @@ class state_t {
 
     /**
      * Check if a position is occupied by a white piece.
-     * 
+     *
      * @param pos The position of the piece.
-     * 
+     *
      * @return True if the position is occupied by a white piece,
      *     false otherwise.
      */
@@ -199,16 +199,16 @@ class state_t {
 
     /**
      * Check if a position is free.
-     * 
+     *
      * @param pos The position of the piece.
-     * 
+     *
      * @return True if the position is free, false otherwise.
      */
     bool is_free(int pos) const { return pos < 4 ? false : !(free_ & (1 << (pos - 4))); }
 
     /**
      * Check if the board is full.
-     * 
+     *
      * @return True if the board is full, false otherwise.
      */
     bool is_full() const { return ~free_ == 0; }
@@ -217,47 +217,47 @@ class state_t {
 
     /**
      * Obtains the value of the state for the minimax algorithm.
-     * 
+     *
      * The value is defined as the subtraction between the number of black pieces
      * and the number of white pieces.
-     * 
+     *
      * @return The value of the state.
      */
     int value() const;
 
     /**
      * Check if a state is terminal.
-     * 
+     *
      * A state is terminal if the board is full or if neither player can move.
-     * 
+     *
      * @return True if the state is terminal, false otherwise.
      */
     bool terminal() const;
 
     /**
      * Check if a piece can outflank some other pieces.
-     * 
+     *
      * @param color The color of the piece.
      * @param pos The position of the piece.
-     * 
+     *
      * @return True if the piece can outflank some other pieces, false otherwise.
      */
     bool outflank(bool color, int pos) const;
 
     /**
      * Check if a black piece can outflank some other pieces.
-     * 
+     *
      * @param pos The position of the piece.
-     * 
+     *
      * @return True if the move is valid for black, false otherwise.
      */
     bool is_black_move(int pos) const { return (pos == DIM) || outflank(true, pos); }
 
     /**
      * Check if a white piece can outflank some other pieces.
-     * 
+     *
      * @param pos The position of the piece.
-     * 
+     *
      * @return True if the move is valid for white, false otherwise.
      */
     bool is_white_move(int pos) const { return (pos == DIM) || outflank(false, pos); }
@@ -266,7 +266,7 @@ class state_t {
 
     /**
      * Set the color of a position.
-     * 
+     *
      * @param color The color of the piece.
      * @param pos The position of the piece.
      */
@@ -274,37 +274,37 @@ class state_t {
 
     /**
      * Return the state after a move.
-     * 
+     *
      * @param color The color of the piece.
      * @param pos The position to move to.
-     * 
+     *
      * @return The state after the move.
      */
     state_t move(bool color, int pos) const;
 
     /**
      * Return the state after a black move.
-     * 
+     *
      * @param pos The position to move to.
-     * 
+     *
      * @return The state after the move.
      */
     state_t black_move(int pos) { return move(true, pos); }
 
     /**
      * Return the state after a white move.
-     * 
+     *
      * @param pos The position to move to.
-     * 
+     *
      * @return The state after the move.
      */
     state_t white_move(int pos) { return move(false, pos); }
 
     /**
      * Get the valid moves for a color
-     * 
-     * @param color 
-     * 
+     *
+     * @param color
+     *
      * @return vector of valid moves for the given color
      */
     std::vector<int> valid_moves(bool color) {
@@ -320,23 +320,23 @@ class state_t {
 
     /**
      * Get a random move for a color
-     * 
+     *
      * @param color
-     * 
+     *
      * @return a random valid move for the given color, or -1 if there are no
      *     valid moves
      */
     int get_random_move(bool color) {
-        std::vector<int> valid_moves = valid_moves(color);
+        std::vector<int> moves = valid_moves(color);
 
-        return valid_moves.empty() ? -1 : valid_moves[lrand48() % valid_moves.size()];
+        return moves.empty() ? -1 : moves[lrand48() % moves.size()];
     }
 
     // ---------- Operators ----------
 
     /**
      * Check if a state is less than another.
-     * 
+     *
      * @param s The state to compare with.
      */
     bool operator<(const state_t &s) const {
@@ -345,7 +345,7 @@ class state_t {
 
     /**
      * Cheks the equality of two states.
-     * 
+     *
      * @param state The state to compare with.
      */
     bool operator==(const state_t &state) const {
@@ -354,7 +354,7 @@ class state_t {
 
     /**
      * Assigns a state to another.
-     * 
+     *
      * @param state The state to compare with.
      */
     const state_t& operator=(const state_t &state) {
@@ -368,9 +368,9 @@ class state_t {
 
     /**
      * Print the state in a human-readable way. Example:
-     * 
+     *
      * (Black pieces: &, White pieces: X, Empty spaces: .)
-     * 
+     *
      * +------+
      * |......|
      * |......|
@@ -379,7 +379,7 @@ class state_t {
      * |......|
      * |......|
      * +------+
-     * 
+     *
      * @param os The output stream.
      * @param depth The depth of the state.
      */
@@ -388,10 +388,10 @@ class state_t {
     /**
      * Print the state in a compact way, using the bit representation of the
      * state. Example:
-     * 
+     *
      * t_:free_:pos_
      * 0110:00000000000000000000000000000000:00000000000000000000000000000000
-     * 
+     *
      * @param os The output stream.
      */
     void print_bits(std::ostream &os) const;
@@ -425,7 +425,7 @@ inline bool state_t::outflank(bool color, int pos) const {
 
     /**
      * Algorithm:
-     * 
+     *
      * 1. Find the position of the piece in the row
      * 2. Check if there are some pieces of the other color between the piece
      *    and the next piece of the same color (checks forwards)
@@ -496,7 +496,7 @@ inline void state_t::set_color(bool color, int pos) {
      * Colors are set by bitwise operations depending if the color is black or
      * white, black pieces are stored using OR operations and white pieces are
      * stored using AND operations.
-     * 
+     *
      * Central positions modify the t_ variable, while the rest modify pos_ and
      * free_ variables.
      */
