@@ -29,7 +29,6 @@
 #define DIM 36
 #define N 6
 
-
 /**
  * rows[i] Contains the position of cells in the same row as cell i
  *
