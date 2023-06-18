@@ -1,0 +1,23 @@
+CXX = g++
+OPT = -Ofast -Wall -Wpedantic -std=c++17 -march=native -mtune=native
+BUILD = ../build
+BIN = ../bin
+
+$(BIN)/alpha-othello:	main.cpp $(BUILD)/othello_cut.o $(BUILD)/utils.o | $(BIN)
+	$(CXX) $(OPT) -o $(BIN)/alpha-othello main.cpp -I$(BUILD)
+
+$(BUILD)/othello_cut.o:	othello_cut.hpp | $(BUILD)
+	$(CXX) $(OPT) -c othello_cut.hpp -o $(BUILD)/othello_cut.o
+
+$(BUILD)/utils.o:	utils.hpp | $(BUILD)
+	$(CXX) $(OPT) -c utils.hpp -o $(BUILD)/utils.o
+
+$(BUILD):
+	mkdir -p $(BUILD)
+
+$(BIN):
+	mkdir -p $(BIN)
+
+clean:
+	rm -rf $(BUILD)/*
+	rm -rf $(BIN)/*

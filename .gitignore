@@ -31,3 +31,9 @@
 *.out
 *.app
 ****main
+****alpha-othello
+
+# Directories
+bin/
+build/
+lib/
