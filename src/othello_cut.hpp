@@ -498,7 +498,7 @@ inline void state_t::set_color(bool color, int pos) {
     /**
      * Colors are set by bitwise operations depending if the color is black or
      * white, black pieces are stored using OR operations and white pieces are
-     * stored using AND operations.
+     * stored using AND operations along with complement.
      *
      * Central positions modify the t_ variable, while the rest modify pos_ and
      * free_ variables.
@@ -533,7 +533,7 @@ inline state_t state_t::move(bool color, int pos) const {
     /**
      * The algorithm is the same as the one used in outflank, but instead of
      * returning true when an outflanked stone is found, the color of the stones
-     * between the piece and the next piece of the same color is flipped.
+     * between the piece and the next piece of the same color are flipped.
      */
 
     // Process rows
