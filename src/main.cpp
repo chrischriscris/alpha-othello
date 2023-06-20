@@ -15,20 +15,22 @@ using namespace std;
 
 unsigned expanded = 0;
 unsigned generated = 0;
-int tt_threshold = 32; // threshold to save entries in TT
+int tt_threshold = 262144; // 2^18
 
-// Transposition table (it is not necessary to implement TT)
+/** Stored information for states */
 struct stored_info_t {
     int value_;
     int type_;
     enum { EXACT, LOWER, UPPER };
-    stored_info_t(int value = -100, int type = LOWER) : value_(value), type_(type) { }
+    stored_info_t(int value = -INT_MAX, int type = LOWER) : value_(value), type_(type) { }
 };
 
+/** Hash function for states */
 struct hash_function_t {
     size_t operator()(const state_t &state) const { return state.hash(); }
 };
 
+/** Transposition table for states */
 class hash_table_t : public unordered_map<state_t, stored_info_t, hash_function_t> {
 };
 
@@ -68,7 +70,6 @@ int main(int argc, const char **argv) {
 
     // Extract principal variation of the game
     state_t state;
-    cout << "Extracting principal variation (PV) with " << npv << " plays... " << flush;
     for (int i = 0; PV[i] != -1; i++) {
         // Black moves first
         bool player = i % 2 == 0;
@@ -77,10 +78,6 @@ int main(int argc, const char **argv) {
         state = state.move(player, pos);
     }
     pv[0] = state;
-    cout << "Done!" << endl;
-
-    // Print principal variation
-    // for (int i = 0; i <= npv; i++) cout << pv[npv - i];
 
     // Print the name of algorithm
     cout << "Algorithm: " << algorithms[algorithm - 1];
@@ -100,16 +97,16 @@ int main(int argc, const char **argv) {
         int color = i % 2 == 0 ? -1 : 1;
 
         float start_time = Utils::read_time_in_seconds(); {
-        try {
-            value = (algorithm == 1) ? negamax(pv[i], npv, color, use_tt)
-                : (algorithm == 2) ? negamax(pv[i], npv, -INT_MAX, INT_MAX, color, use_tt)
-                : (algorithm == 3) ? scout(pv[i], npv, color, use_tt)
-                : negascout(pv[i], npv, -INT_MAX, INT_MAX, color, use_tt);
-        } catch (const bad_alloc &e) {
-            cout << "size TT[0]: size=" << TTable[0].size() << ", #buckets=" << TTable[0].bucket_count() << endl;
-            cout << "size TT[1]: size=" << TTable[1].size() << ", #buckets=" << TTable[1].bucket_count() << endl;
-            use_tt = false;
-        }
+            try {
+                value = (algorithm == 1) ? negamax(pv[i], npv, color, use_tt)
+                    : (algorithm == 2) ? negamax(pv[i], npv, -INT_MAX, INT_MAX, color, use_tt)
+                    : (algorithm == 3) ? scout(pv[i], npv, color, use_tt)
+                    : negascout(pv[i], npv, -INT_MAX, INT_MAX, color, use_tt);
+            } catch (const bad_alloc &e) {
+                cout << "size TT[0]: size=" << TTable[0].size() << ", #buckets=" << TTable[0].bucket_count() << endl;
+                cout << "size TT[1]: size=" << TTable[1].size() << ", #buckets=" << TTable[1].bucket_count() << endl;
+                use_tt = false;
+            }
         } float elapsed_time = Utils::read_time_in_seconds() - start_time;
 
         cout << npv + 1 - i << ". " << (color == 1 ? "Black" : "White") << " moves: "
@@ -137,14 +134,33 @@ int main(int argc, const char **argv) {
 int negamax(state_t state, int depth, int color, bool use_tt) {
     generated++;
     if (!depth || state.terminal()) return color * state.value();
+    bool _color = color == 1;
+
+    if (use_tt) {
+        // Check transposition table
+        auto it = TTable[_color].find(state);
+        if (it != TTable[_color].end()) {
+            expanded++;
+            return it->second.value_;
+        }
+    }
 
     // Expand non-terminal nodes
-    bool _color = color == 1;
     int score = -INT_MAX;
     for (int pos : state.valid_moves(_color)) {
         state_t child = state.move(_color, pos);
         score = max(score, -negamax(child, depth - 1, -color, use_tt));
     }
+
+    // Update transposition table
+    if (use_tt) {
+        // If the threshold is reached, clear the table
+        if (TTable[_color].size() > (long unsigned int)tt_threshold)
+            TTable[_color].clear();
+
+        TTable[_color][state] = stored_info_t{score, stored_info_t::EXACT};
+    }
+
 
     expanded++;
     return score;
@@ -166,8 +182,30 @@ int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_t
     generated++;
     if (!depth || state.terminal()) return color * state.value();
 
-    // Expand non-terminal nodes
     bool _color = color == 1;
+    int alpha_orig = alpha;
+
+    if (use_tt) {
+        // Check transposition table
+        auto it = TTable[_color].find(state);
+        if (it != TTable[_color].end()) {
+            if (it->second.type_ == stored_info_t::EXACT) {
+                expanded++;
+                return it->second.value_;
+            } else if (it->second.type_ == stored_info_t::LOWER) {
+                alpha = max(alpha, it->second.value_);
+            } else if (it->second.type_ == stored_info_t::UPPER) {
+                beta = min(beta, it->second.value_);
+            }
+
+            if (alpha >= beta) {
+                expanded++;
+                return it->second.value_;
+            }
+        }
+    }
+
+    // Expand non-terminal nodes
     int score = -INT_MAX;
     for (int pos : state.valid_moves(_color)) {
         state_t child = state.move(_color, pos);
@@ -176,6 +214,20 @@ int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_t
         // Update alpha and prune if necessary
         alpha = max(alpha, score);
         if (alpha >= beta) break;
+    }
+
+    // Update transposition table
+    if (use_tt) {
+        // If the threshold is reached, clear the table
+        if (TTable[_color].size() > (long unsigned int)tt_threshold)
+            TTable[_color].clear();
+
+        TTable[_color][state] = stored_info_t{
+            score,
+            (score <= alpha_orig) ? stored_info_t::UPPER :
+            (score >= beta) ? stored_info_t::LOWER :
+            stored_info_t::EXACT
+        };
     }
 
     expanded++;
@@ -225,24 +277,42 @@ int scout(state_t state, int depth, int color, bool use_tt) {
 
     bool _color = color == 1;
 
+    if (use_tt) {
+        // Check transposition table
+        auto it = TTable[_color].find(state);
+        if (it != TTable[_color].end()) {
+            expanded++;
+            return it->second.value_;
+        }
+    }
+
     // First child
     vector<int> moves = state.valid_moves(_color);
     state_t child = state.move(_color, moves[0]);
-    int value = scout(child, depth - 1, -color, use_tt);
+    int score = scout(child, depth - 1, -color, use_tt);
 
     for (long unsigned int i = 1; i < moves.size(); i++) {
         child = state.move(_color, moves[i]);
         int child_value = scout(child, depth - 1, -color, use_tt);
 
-        if (_color && test(child, depth - 1, -color, value, false))
-            value = child_value;
+        if (_color && test(child, depth - 1, -color, score, false))
+            score = child_value;
 
-        if (!(_color || test(child, depth - 1, -color, value, true)))
-            value = child_value;
+        if (!(_color || test(child, depth - 1, -color, score, true)))
+            score = child_value;
+    }
+
+    // Update transposition table
+    if (use_tt) {
+        // If the threshold is reached, clear the table
+        if (TTable[_color].size() > (long unsigned int)tt_threshold)
+            TTable[_color].clear();
+
+        TTable[_color][state] = stored_info_t{score, stored_info_t::EXACT};
     }
 
     expanded++;
-    return value;
+    return score;
 }
 
 /**
@@ -262,6 +332,26 @@ int negascout(state_t state, int depth, int alpha, int beta, int color, bool use
     if (!depth || state.terminal()) return color * state.value();
 
     bool _color = color == 1;
+    int alpha_orig = alpha;
+
+    if (use_tt) {
+        auto it = TTable[_color].find(state);
+        if (it != TTable[_color].end()) {
+            if (it->second.type_ == stored_info_t::EXACT) {
+                expanded++;
+                return it->second.value_;
+            } else if (it->second.type_ == stored_info_t::LOWER) {
+                alpha = max(alpha, it->second.value_);
+            } else if (it->second.type_ == stored_info_t::UPPER) {
+                beta = min(beta, it->second.value_);
+            }
+
+            if (alpha >= beta) {
+                expanded++;
+                return it->second.value_;
+            }
+        }
+    }
 
     int score = -INT_MAX;
     vector<int> moves = state.valid_moves(_color);
@@ -280,6 +370,19 @@ int negascout(state_t state, int depth, int alpha, int beta, int color, bool use
 
         alpha = max(alpha, score);
         if (alpha >= beta) break;
+    }
+
+    // Update transposition table
+    if (use_tt) {
+        if (TTable[_color].size() > (long unsigned int)tt_threshold)
+            TTable[_color].clear();
+
+        TTable[_color][state] = stored_info_t{
+            score,
+            (score <= alpha_orig) ? stored_info_t::UPPER :
+            (score >= beta) ? stored_info_t::LOWER :
+            stored_info_t::EXACT
+        };
     }
 
     expanded++;
