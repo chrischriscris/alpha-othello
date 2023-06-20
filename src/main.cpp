@@ -34,9 +34,6 @@ class hash_table_t : public unordered_map<state_t, stored_info_t, hash_function_
 
 hash_table_t TTable[2];
 
-//int maxmin(state_t state, int depth, bool use_tt);
-//int minmax(state_t state, int depth, bool use_tt = false);
-//int maxmin(state_t state, int depth, bool use_tt = false);
 int negamax(state_t state, int depth, int color, bool use_tt = false);
 int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_tt = false);
 int scout(state_t state, int depth, int color, bool use_tt = false);
@@ -139,18 +136,18 @@ int main(int argc, const char **argv) {
  */
 int negamax(state_t state, int depth, int color, bool use_tt) {
     generated++;
-    if (depth == 0 || state.terminal()) return color * state.value();
+    if (!depth || state.terminal()) return color * state.value();
 
     // Expand non-terminal nodes
     bool _color = color == 1;
-    int value = INT_MIN;
+    int score = -INT_MAX;
     for (int pos : state.valid_moves(_color)) {
         state_t child = state.move(_color, pos);
-        value = max(value, -negamax(child, depth - 1, -color, use_tt));
+        score = max(score, -negamax(child, depth - 1, -color, use_tt));
     }
 
     expanded++;
-    return value;
+    return score;
 }
 
 /**
@@ -162,26 +159,27 @@ int negamax(state_t state, int depth, int color, bool use_tt) {
  * @param beta Beta value
  * @param color Color of the player to move
  * @param use_tt Use transposition table
+ *
  * @return Value of the state
  */
 int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_tt) {
     generated++;
-    if (depth == 0 || state.terminal()) return color * state.value();
+    if (!depth || state.terminal()) return color * state.value();
 
     // Expand non-terminal nodes
     bool _color = color == 1;
-    int value = INT_MIN;
+    int score = -INT_MAX;
     for (int pos : state.valid_moves(_color)) {
         state_t child = state.move(_color, pos);
-        value = max(value, -negamax(child, depth - 1, -beta, -alpha, -color, use_tt));
+        score = max(score, -negamax(child, depth - 1, -beta, -alpha, -color, use_tt));
 
         // Update alpha and prune if necessary
-        alpha = max(alpha, value);
+        alpha = max(alpha, score);
         if (alpha >= beta) break;
     }
 
     expanded++;
-    return value;
+    return score;
 }
 
 /**
@@ -194,78 +192,81 @@ int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_t
  * @param cond Condition to compare the score: 0 >, 1 >=
  */
 bool test(state_t state, int depth, int color, int score, bool cond) {
-    // If the state is terminal or depth == 0, return the value of the state
     generated++;
-    if (depth == 0 || state.terminal())
+    if (!depth || state.terminal())
         return (cond ? state.value() >= score : state.value() > score);
 
-    // If the state is not in the TT, calculate the value of the state
     expanded++;
-    for (int pos : state.valid_moves(color == 1)) {
-        state_t child = state.move(color == 1, pos);
+    bool _color = color == 1;
+    for (int pos : state.valid_moves(_color)) {
+        state_t child = state.move(_color, pos);
 
-        if (color == 1 && test(child, depth - 1, -color, score, cond))
-            return true;
-        if (color == -1 && !test(child, depth - 1, -color, score, cond))
-            return false;
+        if (_color && test(child, depth - 1, -color, score, cond)) return true;
+        if (!(_color || test(child, depth - 1, -color, score, cond))) return false;
     }
 
     // If no child is a win, return false
-    return color == -1;
+    return !_color;
 }
 
 /**
  * Scout algorithm
+ *
  * @param state State to evaluate
  * @param depth Depth of the search
  * @param color Color of the player to move
  * @param use_tt Use transposition table
+ *
  * @return Value of the state
  */
 int scout(state_t state, int depth, int color, bool use_tt) {
-    // If the state is terminal or depth == 0, return the value of the state
     generated++;
-    if (depth == 0 || state.terminal()) return state.value();
+    if (!depth || state.terminal()) return state.value();
+
+    bool _color = color == 1;
 
     // First child
-    vector<int> moves = state.valid_moves(color == 1);
-    state_t child = state.move(color == 1, moves[0]);
-    int score = scout(child, depth - 1, -color, use_tt);
+    vector<int> moves = state.valid_moves(_color);
+    state_t child = state.move(_color, moves[0]);
+    int value = scout(child, depth - 1, -color, use_tt);
 
     for (long unsigned int i = 1; i < moves.size(); i++) {
-        child = state.move(color == 1, moves[i]);
-        int val = scout(child, depth - 1, -color, use_tt);
+        child = state.move(_color, moves[i]);
+        int child_value = scout(child, depth - 1, -color, use_tt);
 
-        if (color == 1 && test(child, depth - 1, -color, score, 0))
-            score = val;
+        if (_color && test(child, depth - 1, -color, value, false))
+            value = child_value;
 
-        if (color == -1 && !test(child, depth - 1, -color, score, 1))
-            score = val;
+        if (!(_color || test(child, depth - 1, -color, value, true)))
+            value = child_value;
     }
 
     expanded++;
-    return score;
+    return value;
 }
 
 /**
  * Negascout algorithm
+ *
  * @param state State to evaluate
  * @param depth Depth of the search
  * @param alpha Alpha value
  * @param beta Beta value
  * @param color Color of the player to move
  * @param use_tt Use transposition table
+ *
  * @return Value of the state
  */
 int negascout(state_t state, int depth, int alpha, int beta, int color, bool use_tt) {
-    // If the state is terminal or depth == 0, return the value of the state
     generated++;
-    if (depth == 0 || state.terminal()) return color * state.value();
+    if (!depth || state.terminal()) return color * state.value();
 
-    int score = INT_MIN;
-    vector<int> moves = state.valid_moves(color == 1);
+    bool _color = color == 1;
+
+    int score = -INT_MAX;
+    vector<int> moves = state.valid_moves(_color);
     for (long unsigned int i = 0; i < moves.size(); i++) {
-        state_t child = state.move(color == 1, moves[i]);
+        state_t child = state.move(_color, moves[i]);
 
         // First child
         if (i == 0) {
