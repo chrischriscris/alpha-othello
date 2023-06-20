@@ -91,9 +91,8 @@ const int dia2[][7] = {
  * -1 is used as a sentinel to indicate the end of the moves
  */
 static int PV[] = {
-    12, 21, 26, 13, 22, 18,  7,  6,  5, 27, 33, 23, 17, 11, 19, 15,
-    14, 31, 20, 32, 30, 10, 25, 24, 34, 28, 16,  4, 29, 35, 36,  8,
-    9, -1
+    12, 21, 26, 13, 22, 18,  7,  6,  5, 27, 33, 23, 17, 11, 19, 15, 14,
+    31, 20, 32, 30, 10, 25, 24, 34, 28, 16,  4, 29, 35, 36,  8, 9, -1
 };
 
 /**
@@ -312,11 +311,15 @@ class state_t {
      */
     std::vector<int> valid_moves(bool color) {
         std::vector<int> moves;
-        for (int pos = 0; pos < DIM; pos++) {
-            if ((color && is_black_move(pos)) || (!color && is_white_move(pos))) {
+        for (int pos = 0; pos < DIM; pos++)
+            if ((color && is_black_move(pos)) || (!color && is_white_move(pos)))
                 moves.push_back(pos);
-            }
-        }
+
+        /**
+         * Add DIM to the list of moves if there are no valid moves, to indicate
+         * that the player must pass
+         */
+        if (moves.empty()) moves.push_back(DIM);
 
         return moves;
     }
@@ -326,13 +329,13 @@ class state_t {
      *
      * @param color
      *
-     * @return a random valid move for the given color, or -1 if there are no
-     *     valid moves
+     * @return a random valid move for the given color, it'll return DIM if there
+     *        are no valid moves
      */
     int get_random_move(bool color) {
         std::vector<int> moves = valid_moves(color);
 
-        return moves.empty() ? -1 : moves[lrand48() % moves.size()];
+        return moves[lrand48() % moves.size()];
     }
 
     // ---------- Operators ----------
@@ -413,6 +416,7 @@ inline int state_t::value() const {
 inline bool state_t::terminal() const {
     if (is_full()) return true;
 
+    // Check if there are no valid moves for both players
     for (unsigned b = 0; b < DIM; b++)
         if (is_black_move(b) || is_white_move(b)) return false;
 
@@ -637,6 +641,23 @@ inline void state_t::print_bits(std::ostream &os) const {
     for (int i = 31; i >= 0; i--) os << (free_ & (1 << i) ? '1' : '0');
 }
 
+/**
+ * Print the state in a human-readable way. Example:
+ *
+ * (Black pieces: &, White pieces: X, Empty spaces: .)
+ *
+ * +------+
+ * |......|
+ * |......|
+ * |..&O..|
+ * |..O&..|
+ * |......|
+ * |......|
+ * +------+
+ *
+ * @param os The output stream.
+ * @param depth The depth of the state.
+ */
 inline std::ostream& operator<<(std::ostream &os, const state_t &state) {
     state.print(os);
     return os;
