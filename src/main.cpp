@@ -189,18 +189,20 @@ int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_t
         // Check transposition table
         auto it = TTable[_color].find(state);
         if (it != TTable[_color].end()) {
-            if (it->second.type_ == stored_info_t::EXACT) {
+            stored_info_t info_t = it->second;
+
+            if (info_t.type_ == stored_info_t::EXACT) {
                 expanded++;
-                return it->second.value_;
-            } else if (it->second.type_ == stored_info_t::LOWER) {
-                alpha = max(alpha, it->second.value_);
-            } else if (it->second.type_ == stored_info_t::UPPER) {
-                beta = min(beta, it->second.value_);
+                return info_t.value_;
+            } else if (info_t.type_ == stored_info_t::LOWER) {
+                alpha = max(alpha, info_t.value_);
+            } else if (info_t.type_ == stored_info_t::UPPER) {
+                beta = min(beta, info_t.value_);
             }
 
             if (alpha >= beta) {
                 expanded++;
-                return it->second.value_;
+                return info_t.value_;
             }
         }
     }
@@ -337,18 +339,20 @@ int negascout(state_t state, int depth, int alpha, int beta, int color, bool use
     if (use_tt) {
         auto it = TTable[_color].find(state);
         if (it != TTable[_color].end()) {
-            if (it->second.type_ == stored_info_t::EXACT) {
+            stored_info_t info_t = it->second;
+
+            if (info_t.type_ == stored_info_t::EXACT) {
                 expanded++;
-                return it->second.value_;
-            } else if (it->second.type_ == stored_info_t::LOWER) {
-                alpha = max(alpha, it->second.value_);
-            } else if (it->second.type_ == stored_info_t::UPPER) {
-                beta = min(beta, it->second.value_);
+                return info_t.value_;
+            } else if (info_t.type_ == stored_info_t::LOWER) {
+                alpha = max(alpha, info_t.value_);
+            } else if (info_t.type_ == stored_info_t::UPPER) {
+                beta = min(beta, info_t.value_);
             }
 
             if (alpha >= beta) {
                 expanded++;
-                return it->second.value_;
+                return info_t.value_;
             }
         }
     }
@@ -378,9 +382,9 @@ int negascout(state_t state, int depth, int alpha, int beta, int color, bool use
             TTable[_color].clear();
 
         TTable[_color][state] = stored_info_t{
-            score,
-            (score <= alpha_orig) ? stored_info_t::UPPER :
-            (score >= beta) ? stored_info_t::LOWER :
+            alpha,
+            (alpha <= alpha_orig) ? stored_info_t::UPPER :
+            (alpha >= beta) ? stored_info_t::LOWER :
             stored_info_t::EXACT
         };
     }
