@@ -280,7 +280,7 @@ int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_t
  * @param depth Depth of the search
  * @param color Color of the player to move
  * @param score Score to compare
- * @param cond Condition to compare the score: 0 >, 1 >=
+ * @param cond Condition to compare the score: false >, true >=
  */
 bool test(state_t state, int depth, int color, int score, bool cond) {
     generated++;
@@ -332,13 +332,12 @@ int scout(state_t state, int depth, int color, bool use_tt) {
 
     for (long unsigned int i = 1; i < moves.size(); i++) {
         child = state.move(_color, moves[i]);
-        int child_value = scout(child, depth - 1, -color, use_tt);
 
         if (_color && test(child, depth - 1, -color, score, false))
-            score = child_value;
+            score = scout(child, depth - 1, -color, use_tt);
 
         if (!(_color || test(child, depth - 1, -color, score, true)))
-            score = child_value;
+            score = scout(child, depth - 1, -color, use_tt);
     }
 
     // Update transposition table
