@@ -21,8 +21,8 @@ using namespace std;
 
 // ---------- Global variables ----------
 
-unsigned expanded = 0;
-unsigned generated = 0;
+unsigned long expanded = 0;
+unsigned long generated = 0;
 int tt_threshold = 262144; // 2^18
 
 // ---------- Classes and structures ----------
@@ -131,10 +131,10 @@ int main(int argc, const char **argv) {
 
         float start_time = Utils::read_time_in_seconds(); {
             try {
-                value = (algorithm == 1) ? negamax(pv[i], i, color, use_tt)
-                    : (algorithm == 2) ? negamax(pv[i], i, -INT_MAX, INT_MAX, color, use_tt)
-                    : (algorithm == 3) ? scout(pv[i], i, color, use_tt)
-                    : negascout(pv[i], i, -INT_MAX, INT_MAX, color, use_tt);
+                value = (algorithm == 1) ? negamax(pv[i], npv, color, use_tt)
+                    : (algorithm == 2) ? negamax(pv[i], npv, -INT_MAX, INT_MAX, color, use_tt)
+                    : (algorithm == 3) ? scout(pv[i], npv, color, use_tt)
+                    : negascout(pv[i], npv, -INT_MAX, INT_MAX, color, use_tt);
             } catch (const bad_alloc &e) {
                 cout << "size TT[0]: size=" << TTable[0].size() << ", #buckets=" << TTable[0].bucket_count() << endl;
                 cout << "size TT[1]: size=" << TTable[1].size() << ", #buckets=" << TTable[1].bucket_count() << endl;

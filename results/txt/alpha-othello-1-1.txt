@@ -1,0 +1,21 @@
+Algorithm: Negamax (minmax version) w/ transposition table
+Moving along PV:
+34. White moves: value=-4, #expanded=0, #generated=1, seconds=3.00002e-06, #generated/second=333331
+33. Black moves: value=-4, #expanded=1, #generated=2, seconds=6.00005e-06, #generated/second=333331
+32. White moves: value=-4, #expanded=3, #generated=5, seconds=1.09999e-05, #generated/second=454552
+31. Black moves: value=-4, #expanded=4, #generated=6, seconds=6.00005e-06, #generated/second=999992
+30. White moves: value=-4, #expanded=9, #generated=13, seconds=1.30001e-05, #generated/second=999992
+29. Black moves: value=-4, #expanded=10, #generated=14, seconds=1.19999e-05, #generated/second=1.16668e+06
+28. White moves: value=-4, #expanded=62, #generated=86, seconds=7.89999e-05, #generated/second=1.08861e+06
+27. Black moves: value=-4, #expanded=122, #generated=168, seconds=0.000141, #generated/second=1.19149e+06
+26. White moves: value=-4, #expanded=562, #generated=751, seconds=0.000768, #generated/second=977865
+25. Black moves: value=-4, #expanded=2094, #generated=2791, seconds=0.002595, #generated/second=1.07553e+06
+24. White moves: value=-4, #expanded=4686, #generated=6091, seconds=0.005272, #generated/second=1.15535e+06
+23. Black moves: value=-4, #expanded=26577, #generated=33842, seconds=0.01664, #generated/second=2.03377e+06
+22. White moves: value=-4, #expanded=111142, #generated=139320, seconds=0.047219, #generated/second=2.95051e+06
+21. Black moves: value=-4, #expanded=542995, #generated=663929, seconds=0.298848, #generated/second=2.22163e+06
+20. White moves: value=-4, #expanded=2665366, #generated=3278952, seconds=1.51248, #generated/second=2.16793e+06
+19. Black moves: value=-4, #expanded=19874171, #generated=24470694, seconds=11.6038, #generated/second=2.10885e+06
+18. White moves: value=-4, #expanded=178133931, #generated=219412839, seconds=104.782, #generated/second=2.094e+06
+17. Black moves: value=-4, #expanded=1086354511, #generated=1333106289, seconds=637.644, #generated/second=2.09068e+06
+Time limit reached, #expanded=529816673, #generated=1628126108
