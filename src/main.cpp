@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <climits>
+#include <signal.h>
 #include "othello_cut.hpp"
 #include "utils.hpp"
 
@@ -13,9 +14,13 @@
 
 using namespace std;
 
+// ---------- Global variables ----------
+
 unsigned expanded = 0;
 unsigned generated = 0;
 int tt_threshold = 262144; // 2^18
+
+// ---------- Classes and structures ----------
 
 /** Stored information for states */
 struct stored_info_t {
@@ -36,12 +41,35 @@ class hash_table_t : public unordered_map<state_t, stored_info_t, hash_function_
 
 hash_table_t TTable[2];
 
+// ---------- Function prototypes ----------
+
 int negamax(state_t state, int depth, int color, bool use_tt = false);
 int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_tt = false);
 int scout(state_t state, int depth, int color, bool use_tt = false);
 int negascout(state_t state, int depth, int alpha, int beta, int color, bool use_tt = false);
 
+
+/**
+ * Signal handler that prints a message to stderr indicating that the time limit
+ * has been reached and the number of states visited, and then exits the program.
+ * 
+ * @param signum The signal number
+ */
+void timeout(int signum) {
+    // Prints to stderr so that it doesn't interfere with the output
+    cout << "Time limit reached"
+         << ", #expanded=" << expanded
+         << ", #generated=" << generated << endl;
+
+    exit(0);
+}
+
+/**
+ * Main function
+ */
 int main(int argc, const char **argv) {
+    signal(SIGTERM, timeout);
+
     // Variables to store the principal variation
     state_t pv[128];
     int npv = 0;
@@ -98,10 +126,10 @@ int main(int argc, const char **argv) {
 
         float start_time = Utils::read_time_in_seconds(); {
             try {
-                value = (algorithm == 1) ? negamax(pv[i], npv, color, use_tt)
-                    : (algorithm == 2) ? negamax(pv[i], npv, -INT_MAX, INT_MAX, color, use_tt)
-                    : (algorithm == 3) ? scout(pv[i], npv, color, use_tt)
-                    : negascout(pv[i], npv, -INT_MAX, INT_MAX, color, use_tt);
+                value = (algorithm == 1) ? negamax(pv[i], i, color, use_tt)
+                    : (algorithm == 2) ? negamax(pv[i], i, -INT_MAX, INT_MAX, color, use_tt)
+                    : (algorithm == 3) ? scout(pv[i], i, color, use_tt)
+                    : negascout(pv[i], i, -INT_MAX, INT_MAX, color, use_tt);
             } catch (const bad_alloc &e) {
                 cout << "size TT[0]: size=" << TTable[0].size() << ", #buckets=" << TTable[0].bucket_count() << endl;
                 cout << "size TT[1]: size=" << TTable[1].size() << ", #buckets=" << TTable[1].bucket_count() << endl;
@@ -121,6 +149,8 @@ int main(int argc, const char **argv) {
     return 0;
 }
 
+// ---------- Algorithms ----------
+
 /**
  * Negamax algorithm (minmax version)
  *
@@ -134,10 +164,11 @@ int main(int argc, const char **argv) {
 int negamax(state_t state, int depth, int color, bool use_tt) {
     generated++;
     if (!depth || state.terminal()) return color * state.value();
+
     bool _color = color == 1;
 
+    // Check transposition table
     if (use_tt) {
-        // Check transposition table
         auto it = TTable[_color].find(state);
         if (it != TTable[_color].end()) {
             expanded++;
@@ -185,6 +216,7 @@ int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_t
     bool _color = color == 1;
     int alpha_orig = alpha;
 
+    // Check transposition table
     if (use_tt) {
         // Check transposition table
         auto it = TTable[_color].find(state);
@@ -279,8 +311,8 @@ int scout(state_t state, int depth, int color, bool use_tt) {
 
     bool _color = color == 1;
 
+    // Check transposition table
     if (use_tt) {
-        // Check transposition table
         auto it = TTable[_color].find(state);
         if (it != TTable[_color].end()) {
             expanded++;
@@ -306,7 +338,6 @@ int scout(state_t state, int depth, int color, bool use_tt) {
 
     // Update transposition table
     if (use_tt) {
-        // If the threshold is reached, clear the table
         if (TTable[_color].size() > (long unsigned int)tt_threshold)
             TTable[_color].clear();
 
@@ -336,6 +367,7 @@ int negascout(state_t state, int depth, int alpha, int beta, int color, bool use
     bool _color = color == 1;
     int alpha_orig = alpha;
 
+    // Check transposition table
     if (use_tt) {
         auto it = TTable[_color].find(state);
         if (it != TTable[_color].end()) {
