@@ -13,9 +13,11 @@
  *  ASSUME THE COST OF ALL NECESSARY SERVICING, REPAIR OR CORRECTION.
  *
  *  Blai Bonet, bonet@ldc.usb.ve
- *
- *  Last revision: 1/11/2016
- *
+ *  Last revision: 01-11-2016
+ * 
+ *  Ka Fung
+ *  Christopher Gómez
+ *  Last revision: 20-06-2022
  */
 
 #ifndef OTHELLO_CUT_HPP

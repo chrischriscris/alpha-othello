@@ -1,8 +1,13 @@
-// Game of Othello -- Example of main
-// Universidad Simon Bolivar, 2012.
-// Author: Blai Bonet
-// Last Revision: 1/11/16
-// Modified by:
+/**
+ * alpha-othello
+ * 
+ * Some implementations of minimax algorithms and friends for the game of Othello,
+ * tested against the PV of the game.
+ * 
+ * Author: Blai Bonet (Universidad Simon Bolivar, 2012).
+ * Modified by: Ka Fung & Christopher Gómez (Universidad Simón Bolívar, 2023).
+ */
+
 
 #include <iostream>
 #include <climits>
