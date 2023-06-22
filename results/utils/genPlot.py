@@ -45,29 +45,31 @@ labels = [
 ]
 
 files = [
-    "../csv/negamax.csv",
-    "../csv/negamax_tt.csv",
-    "../csv/negamax_ab.csv",
-    "../csv/negamax_ab_tt.csv",
-    "../csv/scout.csv",
-    "../csv/scout_tt.csv",
-    "../csv/negascout.csv",
-    "../csv/negascout_tt.csv",
+    "../tests/csv/negamax.csv",
+    "../tests/csv/negamax_tt.csv",
+    "../tests/csv/negamax_ab.csv",
+    "../tests/csv/negamax_ab_tt.csv",
+    "../tests/csv/scout.csv",
+    "../tests/csv/scout_tt.csv",
+    "../tests/csv/negascout.csv",
+    "../tests/csv/negascout_tt.csv",
 ]
 xLabel = "Distance to goal PV" 
+
+# ----------------------- NODES -------------------------
 titleNodes = "Nodes generated and expanded"
 yLabelNodes = "# Nodes"
 
 # No TT
-# labelsNodes = ["Negamax", "Negamax α-β", "Scout", "Negascout"]
-# filesNoTT = [files[0], files[2], files[4], files[6]]
-# titleNoTT = "Nodes generated and expanded (without transposition table)"
-# plotData(filesNoTT, titleNodes, labelsNodes, xLabel, yLabelNodes, 0, [3, 4])
+labelsNodes = ["Negamax", "Negamax α-β", "Scout", "Negascout"]
+filesNoTT = [files[0], files[2], files[4], files[6]]
+titleNoTT = "Nodes generated and expanded (without transposition table)"
+plotData(filesNoTT, titleNoTT, labelsNodes, xLabel, yLabelNodes, 0, [3, 4])
 
-# # With TT
-# filesTT = [files[1], files[3], files[5], files[7]]
-# titleTT = "Nodes generated and expanded (with transposition table)"
-# plotData(filesTT, titleNodes, labelsNodes, xLabel, yLabelNodes, 0, [3, 4])
+# With TT
+filesTT = [files[1], files[3], files[5], files[7]]
+titleTT = "Nodes generated and expanded (with transposition table)"
+plotData(filesTT, titleTT, labelsNodes, xLabel, yLabelNodes, 0, [3, 4])
 
 # Both
 plotData(files, titleNodes, labels, xLabel, yLabelNodes, 0, [3, 4])

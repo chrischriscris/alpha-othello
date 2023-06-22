@@ -1,0 +1,21 @@
+Algorithm: Negamax (minmax version) w/ transposition table
+Moving along PV:
+34. White moves: value=-4, #expanded=0, #generated=1, seconds=2.00002e-06, #generated/second=499996
+33. Black moves: value=-4, #expanded=1, #generated=2, seconds=7.00005e-06, #generated/second=285712
+32. White moves: value=-4, #expanded=3, #generated=5, seconds=1.20001e-05, #generated/second=416664
+31. Black moves: value=-4, #expanded=4, #generated=6, seconds=5.99981e-06, #generated/second=1.00003e+06
+30. White moves: value=-4, #expanded=9, #generated=13, seconds=1.40001e-05, #generated/second=928564
+29. Black moves: value=-4, #expanded=10, #generated=14, seconds=1.20001e-05, #generated/second=1.16666e+06
+28. White moves: value=-4, #expanded=64, #generated=88, seconds=9.1e-05, #generated/second=967033
+27. Black moves: value=-4, #expanded=124, #generated=170, seconds=0.000151, #generated/second=1.12583e+06
+26. White moves: value=-4, #expanded=575, #generated=764, seconds=0.000769, #generated/second=993498
+25. Black moves: value=-4, #expanded=2177, #generated=2868, seconds=0.002128, #generated/second=1.34774e+06
+24. White moves: value=-4, #expanded=4850, #generated=6240, seconds=0.001919, #generated/second=3.25169e+06
+23. Black moves: value=-4, #expanded=27817, #generated=34830, seconds=0.015466, #generated/second=2.25204e+06
+22. White moves: value=-4, #expanded=116035, #generated=143097, seconds=0.049514, #generated/second=2.89003e+06
+21. Black moves: value=-4, #expanded=563965, #generated=678930, seconds=0.309193, #generated/second=2.19581e+06
+20. White moves: value=-4, #expanded=2777738, #generated=3358759, seconds=1.64556, #generated/second=2.0411e+06
+19. Black moves: value=-4, #expanded=20556295, #generated=24868332, seconds=11.8777, #generated/second=2.0937e+06
+18. White moves: value=-4, #expanded=185313352, #generated=224890386, seconds=107.177, #generated/second=2.09831e+06
+17. Black moves: value=-4, #expanded=1139870969, #generated=1378697920, seconds=659.008, #generated/second=2.09208e+06
+Time limit reached, #expanded=4568621215, #generated=5533563979

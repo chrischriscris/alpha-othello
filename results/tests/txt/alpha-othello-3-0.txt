@@ -1,0 +1,27 @@
+Algorithm: Scout
+Moving along PV:
+34. White moves: value=-4, #expanded=0, #generated=1, seconds=9.99775e-07, #generated/second=1.00023e+06
+33. Black moves: value=-4, #expanded=1, #generated=2, seconds=2.00002e-06, #generated/second=999992
+32. White moves: value=-4, #expanded=3, #generated=5, seconds=3.00002e-06, #generated/second=1.66665e+06
+31. Black moves: value=-4, #expanded=4, #generated=6, seconds=2.00002e-06, #generated/second=2.99998e+06
+30. White moves: value=-4, #expanded=14, #generated=20, seconds=7.00005e-06, #generated/second=2.85712e+06
+29. Black moves: value=-4, #expanded=15, #generated=21, seconds=6.99982e-06, #generated/second=3.00008e+06
+28. White moves: value=-4, #expanded=26, #generated=34, seconds=8.7e-05, #generated/second=390805
+27. Black moves: value=-4, #expanded=64, #generated=84, seconds=6.90001e-05, #generated/second=1.21739e+06
+26. White moves: value=-4, #expanded=314, #generated=401, seconds=0.000228, #generated/second=1.75877e+06
+25. Black moves: value=-4, #expanded=1334, #generated=1748, seconds=0.000604, #generated/second=2.89404e+06
+24. White moves: value=-4, #expanded=2011, #generated=2622, seconds=0.000819, #generated/second=3.20146e+06
+23. Black moves: value=-4, #expanded=3232, #generated=4141, seconds=0.001739, #generated/second=2.38125e+06
+22. White moves: value=-4, #expanded=10214, #generated=13285, seconds=0.006497, #generated/second=2.04479e+06
+21. Black moves: value=-4, #expanded=42358, #generated=54461, seconds=0.018269, #generated/second=2.98106e+06
+20. White moves: value=-4, #expanded=68853, #generated=89091, seconds=0.030527, #generated/second=2.91843e+06
+19. Black moves: value=-4, #expanded=157458, #generated=204351, seconds=0.068617, #generated/second=2.97814e+06
+18. White moves: value=-4, #expanded=497954, #generated=649026, seconds=0.224062, #generated/second=2.89664e+06
+17. Black moves: value=-4, #expanded=911296, #generated=1189883, seconds=0.369272, #generated/second=3.22224e+06
+16. White moves: value=-4, #expanded=6096169, #generated=7989969, seconds=2.8535, #generated/second=2.80006e+06
+15. Black moves: value=-4, #expanded=23572285, #generated=30953399, seconds=10.3007, #generated/second=3.00498e+06
+14. White moves: value=-4, #expanded=57114374, #generated=74581266, seconds=26.2928, #generated/second=2.83657e+06
+13. Black moves: value=-4, #expanded=211427675, #generated=276935284, seconds=92.1048, #generated/second=3.00674e+06
+12. White moves: value=-4, #expanded=545805549, #generated=713350259, seconds=237.417, #generated/second=3.00464e+06
+11. Black moves: value=-4, #expanded=3146084778, #generated=4121863467, seconds=1398.54, #generated/second=2.94727e+06
+Time limit reached, #expanded=4274595216, #generated=5621531866
