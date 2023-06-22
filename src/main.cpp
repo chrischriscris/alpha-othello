@@ -8,7 +8,6 @@
  * Modified by: Ka Fung & Christopher Gómez (Universidad Simón Bolívar, 2023).
  */
 
-
 #include <iostream>
 #include <climits>
 #include <signal.h>
@@ -274,7 +273,7 @@ int negamax(state_t state, int depth, int alpha, int beta, int color, bool use_t
 }
 
 /**
- * Test if a state is a win for the player to move
+ * Test function for scout algorithm
  *
  * @param state State to evaluate
  * @param depth Depth of the search
