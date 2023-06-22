@@ -243,5 +243,5 @@ Tras realizar el análisis de los resultados obtenidos, se puede concluir lo sig
 - Las tablas de transposición reducen significativamente el número de nodos expandidos y generados. En particular, los algoritmos sin poda, como Negamax, se benefician más de las tablas de transposición que los algoritmos con poda, como Negascout. 
 - La poda alpha-beta resulta una mejora significativa al algoritmo de Negamax, al lograr que se expandan y generen menos nodos, y por ende, reducir el tiempo de ejecución y lograr que se llegue más lejos en la variación principal. 
 - El algoritmo Scout puede resultar ser más eficaz que el algoritmo con poda alpha-beta, pero no es necesariamente cierto para todos los problemas.
-- El algoritmo que presenta un peor rendimiento es Negamax, tanto en tiempo de ejecución como el valor mínimo de la variación principal.
-- El algoritmo que presenta un mejor rendimiento es Negascout, tanto en tiempo de ejecución como el valor mínimo de la variación principal.
+- El algoritmo que presenta el peor rendimiento es Negamax, tanto en tiempo de ejecución como el valor mínimo de la variación principal.
+- El algoritmo que presenta el mejor rendimiento es Negascout, tanto en tiempo de ejecución como el valor mínimo de la variación principal.
