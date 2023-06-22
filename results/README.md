@@ -41,42 +41,51 @@ Por ejemplo, para la función que verifica si una posición está ocupada dado u
 
 Por otro lado, se completaron las verificaciones sobre las diagonales en las funciones `outflank` y `move` del archivo `othello_cut.hpp`. Dichas verificaciones buscan la posición en que se desea colocar la ficha, y verifican si hay fichas del oponente en las diagonales que se forman con las fichas del jugador en la misma fila y columna que la posición en cuestión. En caso de que este seguimiento de fichas del oponente termine en una ficha del jugador, se considera que hay fichas del oponente que se voltearán al colocar la ficha en la posición en cuestión.
 
-Como detalle de implementación, se modificó la función `valid_moves` del archivo `othello_cut.hpp`, que originalmente retornaba un vector con las posiciones en las que el jugador puede colocar una ficha, estando este vacío si no habían movimientos válidos. La modificación consistió en retornar un vector con el elemento `36`, que representar el movimiento de ceder el turno.
+Como detalle de implementación, se modificó la función `valid_moves` del archivo `othello_cut.hpp`, que originalmente retornaba un vector con las posiciones en las que el jugador puede colocar una ficha, estando este vacío si no habían movimientos válidos. La modificación consistió en retornar un vector con el elemento `36`, que representa el movimiento de ceder el turno.
 
 ### 2.2. Algoritmos de búsqueda
 
 Se implementó los algoritmos de búsqueda Negamax, Negamax con poda alpha-beta, Scout y Negascout en el archivo `main.cpp`:
 
-- Negamax (minmax): 
+- Negamax (minmax): Consiste en una variación del algoritmo minimax, utilizando el hecho de que max(a, b) = -min(-a, -b) para simplificar el código. Así, se busca en cada nivel el movimiento que maximice el puntaje del jugador, asumiendo que el oponente también escogerá el movimiento que maximice su puntaje, que será el negativo del puntaje del jugador. De esta forma se elimina la recursión mutua y la verificación de si el nivel es par o impar.
 
-- Negamax con poda alpha-beta: 
+- Negamax con poda alpha-beta: Una optimización del algoritmo anterior en la que se agregan dos parámetros alpha y beta, que representan el puntaje mínimo que el jugador puede garantizar y el puntaje máximo que el oponente puede garantizar, respectivamente. Así, se podan los nodos que no aportan información, es decir, aquellos en los que el puntaje del jugador es menor o igual a alpha o el puntaje del oponente es mayor o igual a beta, eliminando la necesidad de explorar ciertos subárboles enteros.
 
-- Scout:
+- Scout: Otra optimización de poda sobre minimax que intenta reducir el número de nodos evaluados mediante la exploración selectiva de los nodos más prometedores. En lugar de explorar todos los nodos en un nivel, el algoritmo Scout examina solo el primer nodo y utiliza su puntaje para decidir si se deben explorar los nodos hermanos. Si el puntaje del primer nodo es mayor que el puntaje actual de alpha, se explora el siguiente nodo hermano. Si es menor que el puntaje actual de beta, se explora el siguiente nodo hermano en sentido contrario. Si el puntaje está entre alpha y beta, se realiza una exploración completa del nodo actual. De esta manera, el algoritmo Scout puede evitar la exploración de subárboles enteros que no aportan información relevante. A pesar de conceptualmente involucrar un alpha y un beta, estas variables no se mantienen en la implementación, lo que la hace más sencilla y elegante.
 
-- Negascout:
+- Negascout: Una optimización que combina las ideas de Negamax y Scout, realizando una búsqueda similar a la de Scout pero sin prescindir de la poda alpha-beta, trayendo lo mejor de ambos mundos.
 
-Asimismo, para cada uno de los anteriores algoritmos, se implementó con tablas de transposición.
+Asimismo, para cada uno de los anteriores algoritmos se implementó la posibilidad de usar una tabla de transposición, que almacena los estados visitados y su puntaje, para evitar la evaluación de estados repetidos a lo largo del árbol de búsqueda. Para esto se utilizó la librería `unordered_map` de C++, que implementa una tabla hash, en la que se almacena el estado como clave y el puntaje como valor, además de si se trata de un puntaje exacto, un límite inferior o un límite superior.
+
+Al ser intensiva en el uso de memoria, se intentaron varias técnicas para evitar llenar la memoria, entre ellas:
+
+- Solo almacenar estados hasta 10 niveles de profundidad.
+- Solo almacenar estados con valores exactos (saltando los que son límites inferiores o superiores).
+- Aprovechar la localidad temporal de los estados visitados, limpiando la tabla entera cada vez que el número de nodos generados supera un cierto umbral n. De tal forma solo se tendrían guardados los últimos n nodos generados.
+
+A pesar de no tener pruebas formales, se observó que la última técnica era la más efectiva, por lo que se utilizó en la implementación final. El umbral que se utilizó fue de 2^18 = 262144 nodos, lo cual hace que el uso de memoria con el ejecutable cargado en la memoria RAM sea de aproximadamente 35MB. Umbrales más altos (por ejemplo, 2^20 o 2^22) no mejoraban el rendimiento (y llegaban a usar de 500MB a >1GB de RAM), y umbrales más bajos hacían que se llenara y vaciara la tabla de transposición constantemente sin que se pudiera aprovechar su efecto.
+
+Una idea que no se terminó de implementar, pero que puede servir para futuras mejoras, es la de implementar una tabla con política de reemplazo LRU (Least Recently Used), que almacene los últimos n estados visitados, eliminando los usados hace más tiempo. Esto podría ser más efectivo que la técnica anterior, ya que se aprovecharía la localidad temporal de los estados visitados, pero sin tener que limpiar la tabla entera cada vez que se llena. Se tendría que evaluar si la complejidad adicional en cómputo y memoria vale la pena.
 
 ### 2.3. Evaluación de los algoritmos
 
-Para cada algoritmo, la evaluación se hace comenzando sobre el tablero terminal en la variación principal, y subimos a lo largo de la misma. Cada vez que subimos, volvemos a ejecutar el algoritmo de solución a partir del nodo actual hasta que termine o hasta
-que el límite de tiempo expire. Se estableció como límite de tiempo de 1 hora por cada algoritmo.
+Para cada algoritmo, la evaluación se hace comenzando sobre el tablero terminal en la variación principal, y subimos a lo largo de la misma. Cada vez que subimos, volvemos a ejecutar el algoritmo de solución a partir del nodo actual hasta que termine o hasta que el límite de tiempo expire. Se estableció como límite de tiempo de 1 hora por cada algoritmo.
 
 ## 3. Resultados experimentales
 
 #### 3.1 Entorno de pruebas
-Para la ejecución de los algoritmos \<tal\>, se utilizaron computadores con las siguientes características:
+Para la ejecución de los algoritmos se utilizó un computador con las siguientes características:
 
-|           Procesador           |   RAM   |           Sistema Operativo           |
-| :----------------------------: | :-----: | :-----------------------------------: |
-|  Intel i3-2120 (4) @ 3.300GHz  | 3797MiB | Debian GNU/Linux 11 (bullseye) x86_64 |
-| Intel i5-1035G1 (8) @ 3.600GHz | 7689MiB |       Pop!_OS 22.04 LTS x86_64        |
+- **Procesador**: Intel i5-1035G1 (8) @ 3.600GHz.
+- **Memoria RAM**: 7689MiB.
+- **Sistema operativo**: Pop!_OS 22.04 LTS x86_64.
 
-Por otro lado, los algoritmos de búsqueda fueron implementados en C++, compilado con `g++ <version>` usando las flags `<flags>`.
+Por otro lado, los algoritmos de búsqueda fueron implementados en C++, compilados con `g++ <version>` usando las flags `-Ofast -Wall -Wpedantic -std=c++11 -march=native -mtune=native`, buscando la mayor eficiencia posible.
 
 ### 3.2 Ejecuciones
 
-Se ejecutó el programa para cada algoritmo de búsqueda, con y sin tabla de transposición (TT), con un límite de tiempo de 1 hora. Los resultados se muestran en las siguientes tablas.
+Se ejecutó el programa para cada algoritmo de búsqueda, con y sin tabla de transposición (TT), con un límite de tiempo de 1 hora (3600 segundos). Los resultados se muestran en las siguientes tablas:
+
 #### 3.2.1 Negamax
 
 |PV |Color |Valor |Expandidos   |Generados |Tiempo (s) |Generado/segundo|Expandidos (TT) |Generados (TT)|Tiempo (s) (TT) |Generado/segundo (TT)|
@@ -210,13 +219,18 @@ Como también, se muestra el tiempo de ejecución de cada algoritmo, con y sin t
 
 ![Tiempos](./img/time.png)
 
-Al observar las tablas y la gráfica, se tiene que el algoritmo de Negamax fue el que presentó el peor rendimiento entre los algoritmos de búsqueda, al llegar hasta un valor mínimo de la variación principal de 17 y con 3999381161 (10<sup>10</sup>) nodos expandidos sin tabla de transposición. Mientras que, al mismo estado de PV, se tiene que la poda alpha-beta reduce notoriamente el número de nodos expandidos del algoritmo Negamax, con 1549785 (10<sup>6</sup>) nodos. Asimismo, al aplicar una tabla de transposición para ambos algoritmos, se reduce significativamente el número de nodos a medida que se llega más lejos de la variación principal del juego, con 1139870969 (10<sup>9</sup>) y 829053 (10<sup>6</sup>) nodos expandidos al mismo estado de PV, respectivamente. Además, se puede observar que el algoritmo de Negamax con poda alpha-beta presenta un rendimiento superior al algoritmo de Negamax, al alcanzar un valor mínimo de la variación principal de 11 y 4807701319 (10<sup>10</sup>) nodos expandidos.
+Al observar las tablas y la gráfica, se tiene que el algoritmo de Negamax fue el que presentó el peor rendimiento entre los algoritmos de búsqueda, al llegar hasta un valor mínimo de la variación principal de 17 con 3999381161 (3.9E9) nodos expandidos sin tabla de transposición, mientras que al mismo nivel de la PV usando poda alpha-beta se reduce notoriamente el número de nodos expandidos del algoritmo, con 1549785 (1.5E6) nodos. Asimismo, el uso de una tabla de transposición para ambos algoritmos reduce de forma significativa el número de nodos computados a medida que se llega más lejos de la variación principal del juego, con 1139870.969 (1.1E9) vs. 829053 (8.2E5) al mismo estado de la PV, respectivamente. Además, se puede observar que el algoritmo de Negamax con poda alpha-beta presenta un rendimiento superior al algoritmo de Negamax, al alcanzar un valor mínimo de la variación principal de 11 con 4807701319 (4.8E9) nodos expandidos.
 
-Por otro lado, se puede observar que Scout y Negascout presentan un rendimiento superior que el algoritmo de Negamax, al alcanzar un valor mínimo de la variación principal de 11 y 10, con aproximadamente 10<sup>9</sup> y 10<sup>10</sup> nodos generados, respectivamente. No obstante, para el algoritmo de Scout, las tablas de transposición no presentan una reducción significativa de los nodos expandidos y generados. Esto se puede ver en la figura, al solaparse las líneas de los nodos expandidos y generados con y sin tabla de transposición. Por otro lado, para el algoritmo de Negascout, se puede observar que las tablas de transposición reducen el número de nodos expandidos y generados, al alcanzar un valor mínimo de la variación principal de 10 y 10<sup>9</sup> nodos expandidos al mismo estado de PV.
+Por otro lado, se puede observar que Scout y Negascout presentan un rendimiento superior que el algoritmo de Negamax, al alcanzar un valor mínimo de la variación principal de 11 y 10, con aproximadamente 3.1E9 y 4.2E9 nodos generados, respectivamente. No obstante, para el algoritmo de Scout, las tablas de transposición no presentan una reducción significativa de los nodos expandidos y generados. Esto se puede ver en la figura, al solaparse las líneas de los nodos expandidos y generados con y sin tabla de transposición. Por otro lado, para el algoritmo de Negascout se puede observar que las tablas de transposición reducen el número de nodos expandidos y generados, al alcanzar un valor mínimo de la variación principal de 10 y 2E9 nodos expandidos al mismo nivel de la PV.
 
 No obstante, si bien las tablas de transposición reducen el número de nodos expandidos y generados, estos no presentan una mejora al querer buscar el algoritmo que presente la variación principal más pequeña. Además, presentan un mayor uso de memoria al tener que almacenar los nodos ya visitados.
 
-Ahora, con respecto al tiempo de ejecución
- 
+Ahora, con respecto al tiempo de ejecución, los resultados son los esperados, siendo los algoritmos con poda más eficientes que los que no la tienen, y los que usan tablas de transposición más eficientes que los que no las usan. Para este problema específico, parece que la poda Scout resulta más eficaz que la poda alpha-beta, sin embargo, esto no es necesariamente cierto para todos los problemas. En este caso, tomando como referencia el nivel 12 de las PV, la poda Scout logra expandir todo el árbol tomándose casi 11 minutos menos que la poda alpha-beta y generando aproximadamente 2200 millones de nodos menos. En el mismo orden de ideas, el Negascout logra mejorar esto aún más ahorrándose alrededor de 90 millones de nodos expandidos y 40 segundos de tiempo de ejecución para el mismo nivel de la PV.
+
+En el otro espectro, el negamax base sin poda no logra superar el nivel 17 en 1 hora de ejecución, mientras que todos los demás algoritmos que incorporan poda superan este nivel en menos de 1 segundo, en oposición a los 21 minutos de este algoritmo.
+
+Por último, vale la pena apuntar que, aunque en todos los casos el uso de la tabla de transposición reduce la cantidad de nodos que se generan por segundo (incluso a la mitad), esto es capaz igualmente de reducir el tiempo de ejecución en todos los casos, lo cual es un resultado interesante, y se explica con que el cómputo utilizado para mantener la tabla de transposición logra superar el tiempo que se ahorra al no tener que expandir y generar los nodos que ya se han visitado, lo cual pesa en unos casos más que en otros. En el caso del Negamax, por ejemplo, el tiempo de ejecución se ve reducido a la mitad en el nivel 17, y la cantidad de nodos generados y expandidos se reduce a más de la mitad. En los casos más eficaces, como el Negamax con poda alpha-beta en el nivel 12, el tiempo se reduce en un ~76%, pero luego otros casos como el Negascout en el nivel 10, el tiempo se reduce en menos de un 2%, siendo sin embargo el algoritmo que más lejos llega en la PV y generando la menor cantidad de nodos (menos de 2100 millones, seguido por su versión sin tabla de transposición con más de 5000 millones). Mientras que la versión más ingenua de los algoritmos supera por 5 veces el umbral de los 1000 millones de nodos generados al nivel 17, la más eficaz y eficiente logra subir 6 niveles más apenas superando el millardo de nodos generados.
 
 ## 4. Conclusiones
+
+- Completar
